@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Translation</title>
+</head>
+<body>
+    <h1>Text Translation</h1>
+    <form id="translationForm">
+        <label for="text">Text:</label>
+        <input type="text" id="text" name="text" required>
+        <label for="targetLanguage">Target Language:</label>
+        <select id="targetLanguage" name="targetLanguage">
+            <option value="hi">Hindi</option>
+            <option value="mr">Marathi</option>
+            <option value="ta">Tamil</option>
+            <option value="te">Telugu</option>
+            <option value="ml">Malayalam</option>
+            <option value="gu">Gujarati</option>
+            <option value="kn">Kannada</option>
+            <option value="bn">Bengali</option>
+            <!-- Add more languages as needed -->
+        </select>
+        <button type="submit">Translate</button>
+    </form>
+    <h3>Translated Text:</h3>
+    <div id="translatedTextBox" style="border: 1px solid #000; padding: 10px; width: 300px; min-height: 50px;"></div>
+    <button id="playTranslatedAudioButton" style="margin-top: 10px;">Play Translated Audio</button>
+    
+    <h3>Transcription of Translated Text:</h3>
+    <div id="transcriptionTextBox" style="border: 1px solid #000; padding: 10px; width: 300px; min-height: 50px;"></div>
+    <button id="playTranscriptionAudioButton" style="margin-top: 10px;">Play Transcription Audio</button>
+
+    <script>
+        document.getElementById('translationForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const text = document.getElementById('text').value;
+            const targetLanguage = document.getElementById('targetLanguage').value;
+
+            const response = await fetch('http://127.0.0.1:5000/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text, target_language: targetLanguage })
+            });
+
+            const data = await response.json();
+            const translatedTextBox = document.getElementById('translatedTextBox');
+            const transcriptionTextBox = document.getElementById('transcriptionTextBox');
+            
+            if (data.translated_text && data.transliterated_text) {
+                translatedTextBox.innerText = data.translated_text;
+                transcriptionTextBox.innerText = data.transliterated_text;
+            } else {
+                translatedTextBox.innerText = 'Error translating text';
+                transcriptionTextBox.innerText = '';
+            }
+        });
+
+        document.getElementById('playTranslatedAudioButton').addEventListener('click', function() {
+            const translatedText = document.getElementById('translatedTextBox').innerText;
+            if (translatedText && translatedText !== 'Error translating text') {
+                const speech = new SpeechSynthesisUtterance(translatedText);
+                speechSynthesis.speak(speech);
+            }
+        });
+
+        document.getElementById('playTranscriptionAudioButton').addEventListener('click', function() {
+            const transcriptionText = document.getElementById('transcriptionTextBox').innerText;
+            if (transcriptionText && transcriptionText !== 'Error transcribing text') {
+                const speech = new SpeechSynthesisUtterance(transcriptionText);
+                speechSynthesis.speak(speech);
+            }
+        });
+    </script>
+</body>
+</html>
